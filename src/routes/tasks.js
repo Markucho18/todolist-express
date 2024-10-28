@@ -2,8 +2,11 @@ const express = require("express")
 const router = express.Router()
 const db = require("../db")
 
-const createInsertQuery = require("../createInsertQuery")
-const createUpdateQuery = require("../createUpdateQuery")
+const createInsertQuery = require("../utils/createInsertQuery")
+const createUpdateQuery = require("../utils/createUpdateQuery")
+const verifyToken = require("../utils/verifyToken")
+
+router.use(verifyToken)
 
 const subTasksRouter = require("./subTasks")
 router.use("/subTask", subTasksRouter)
@@ -38,7 +41,7 @@ router.get("/:id", (req, res)=>{
 })
 
 router.post("/", (req, res)=>{
-  const {query, values} = createInsertQuery("tasks", req.body)
+  const {query, values} = createInsertQuery("tasks", {...req.body, user_id: req.user_id})
   db.query(query, values, (err, results)=>{
     if(err) res.json({msg: "There was an error!", error: err})
     else if(results) res.json({msg: "Task created succesfully ", results})
@@ -46,7 +49,7 @@ router.post("/", (req, res)=>{
 })
 
 router.put("/:id", (req, res)=>{
-  const {query, queryValues} = createUpdateQuery("tasks", req.params.id, req.body)
+  const {query, queryValues} = createUpdateQuery("tasks", req.params.id, req.body, req.user_id)
   console.log({queryValues, query})
   db.query(query, queryValues, (error, results)=>{
     if(error) res.json({msg: "Hubo un error en task/PUT: ", error})
@@ -56,8 +59,8 @@ router.put("/:id", (req, res)=>{
 
 router.delete("/:id", (req, res)=>{
   const {id} = req.params
-  const query = `DELETE FROM tasks WHERE task_id = ?`
-  db.query(query, [id], (error, results)=>{
+  const query = `DELETE FROM tasks WHERE task_id = ? AND user_id = ?`
+  db.query(query, [id, req.user_id], (error, results)=>{
     if(error) res.json({msg: "Hubo un error en task/DELETE: ", error})
     else if (results.affectedRows === 0) res.json({ msg: "No se encontró una tarea con ese ID." });
     else res.json({ msg: "Tarea eliminada exitosamente.", results })

@@ -2,7 +2,7 @@ const express = require("express")
 const router = express.Router()
 const db = require("../db")
 
-const createInsertQuery = require("../createInsertQuery")
+const createInsertQuery = require("../utils/createInsertQuery")
 
 router.get("/", (req, res)=>{
   //Checkear si una tarea es hija de otra

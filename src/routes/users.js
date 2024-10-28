@@ -1,10 +1,16 @@
 const express = require("express")
 const router = express.Router()
 const db = require("../db")
+const jwt = require("jsonwebtoken")
+const secretKey = process.env.JWTSECRETKEY
 
-const createInsertQuery = require("../createInsertQuery")
+const createInsertQuery = require("../utils/createInsertQuery")
+const createUpdateQuery = require("../utils/createUpdateQuery")
 
-const { encryptPassword, comparePasswords } = require("../passwordAuth")
+const { encryptPassword, comparePasswords } = require("../utils/passwordAuth")
+
+const pictureRouter = require("./picture")
+router.use("/picture", pictureRouter)
 
 router.get("/", (req, res)=>{
   const query = 'SELECT * FROM users'
@@ -14,7 +20,7 @@ router.get("/", (req, res)=>{
   })
 })
 
-router.get("/validate", (req, res) => {
+router.get("/login", (req, res) => {
   const { email, user_password } = req.body;
   const query = "SELECT * FROM users WHERE email = ?";
   db.query(query, [email], async (error, results) => {
@@ -23,7 +29,8 @@ router.get("/validate", (req, res) => {
     const hashedPassword = results[0].user_password;
     const passwordIsValid = await comparePasswords(user_password, hashedPassword);
     if (passwordIsValid) {
-      res.json({ msg: "The email and password are valid", userIsValid: true });
+      const token = await jwt.sign({user_id: results[0].id}, secretKey, {expiresIn: '1h'})
+      res.json({ msg: "The email and password are valid", userIsValid: true, token});
     } else {
       res.json({ msg: "The password is not valid", userIsValid: false });
     }
@@ -42,9 +49,10 @@ router.get("/:id", (req, res)=>{
 })
 
 router.post("/", async (req, res)=>{
-  const {username, email, user_password, profile_pic} = req.body
+  const {username, email, user_password} = req.body
   const encryptedPassword = await encryptPassword(user_password)
-  const {query, values} = createInsertQuery("users", {username, email, user_password: encryptedPassword, profile_pic})
+  const defaultImageUrl = "https://res.cloudinary.com/dyihwozea/image/upload/byrmbj7rdtui1ohypvxm.webp"
+  const {query, values} = createInsertQuery("users", {username, email, user_password: encryptedPassword, profile_pic: defaultImageUrl})
   db.query(query, values, (error, results)=>{
     if(error) res.json({ msg:"There was an error in users/POST", error })
     else if(results) res.json({ msg:`User ${username} created successfully`, results })

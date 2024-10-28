@@ -3,17 +3,17 @@
 [x]Crear usuario
 [x]Editar y eliminar (opcional)
 [x]Encriptar contraseña
-[ ]Crear y manejar token
+[x]Crear y manejar token
+[x]Validar usuario para acceder a las tareas
 [ ]Meter token en cookie y devolver
 [ ]Almacenar imagen en cloudinary
 [ ]Acceder a la imagen(creo q eso es mas frontend mas que nada)
-[ ]Validar usuario para acceder a las tareas
 
 //Primero lo de usuarios asi puedo validar al usuario y sacarle el userId para acceder a sus tareas
 
 //TASKS:
-[ ]Obtener tareas por fecha(hoy y mañana)
-[ ]Obtener tareas sin fecha
-[ ]Obtener tareas de semana
-[ ]Obtener tareas de mes
+[x]Obtener tareas por fecha(hoy y mañana)
+[x]Obtener tareas sin fecha
+[x]Obtener tareas de semana
+[x]Obtener tareas de mes
 
