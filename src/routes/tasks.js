@@ -5,44 +5,25 @@ const db = require("../db")
 const createInsertQuery = require("../createInsertQuery")
 const createUpdateQuery = require("../createUpdateQuery")
 
+const subTasksRouter = require("./subTasks")
+router.use("/subTask", subTasksRouter)
+
+const dateRouter = require("./date")
+router.use("/date", dateRouter)
+
+/* {
+  "user_id": 2,
+  "task_title": "Estudiar chino mandarin",
+  "task_deadline": "2024-10-27",
+  "task_priority": 3,
+  "task_description": "Con mi cuaderno de hojas de bambu"
+} */
+
 router.get("/", (req, res)=>{
   const query = 'SELECT * FROM tasks'
   db.query(query, (err, results)=>{
     if(err) res.json({ msg:"There was an error", error: err })
     else if(results) res.json({msg:`Here's the tasks table: `, results})
-  })
-})
-
-router.get("/subTask", (req, res)=>{
-  //Checkear si una tarea es hija de otra
-  const { child_task_id, parent_task_id } = req.body
-  const values = [child_task_id, parent_task_id]
-  const query = "SELECT * FROM sub_tasks WHERE child_task_id = ? AND parent_task_id = ?"
-  db.query(query, values, (error, results)=>{
-    if(error) res.json({msg: "Hubo un error en task/GET/subTask: ", error})
-    else if(results.length > 0) res.json({msg: `La tarea ${values[0]} es hija de la tarea ${values[1]}`, results})
-    else res.json({msg: `La tarea ${values[0]} NO ES hija de la tarea ${values[1]}`, results})
-  })
-})
-
-router.post("/subTask", (req, res) => {
-  // keys: child_task_id and parent_task_id
-  const {query, values} = createInsertQuery("sub_tasks", req.body)
-  db.query(query, values, (error, results)=>{
-    if(error) res.json({msg: "Hubo un error en task/POST/subTask: ", error})
-    else if(results) res.json({msg: "Resultados en task/POST/subTask: ", results})
-  })
-})
-
-router.delete("/subTask", (req, res)=>{
-  // keys: child_task_id and parent_task_id
-  const { child_task_id, parent_task_id } = req.body
-  const values = [child_task_id, parent_task_id]
-  const query = "DELETE FROM sub_tasks WHERE child_task_id = ? AND parent_task_id = ?"
-  db.query(query, values, (error, results)=>{
-    if(error) res.json({msg: "Hubo un error en task/DELETE/subTask: ", error})
-    else if(results.length > 0) res.json({msg: `Se elimino la subtarea ${child_task_id}`, results})
-    else res.json({msg: `No se encontro la subtarea ${child_task_id}`, results})
   })
 })
 

@@ -33,10 +33,6 @@ CREATE TABLE IF NOT EXISTS sub_tasks (
     FOREIGN KEY(parent_task_id) REFERENCES tasks(task_id)
 );
 
-INSERT INTO users 
-(username, email, user_password, profile_pic) 
-VALUES ('pepito', 'jorge@gmail.com', 'remolacha123', 'https://github.com');
-
 SELECT * FROM users;
 SELECT * FROM tasks;
 SELECT * FROM sub_tasks
