@@ -22,49 +22,61 @@ router.use("/date", dateRouter)
   "task_description": "Con mi cuaderno de hojas de bambu"
 } */
 
-router.get("/", (req, res)=>{
+router.get("/", async (req, res)=>{
   const query = 'SELECT * FROM tasks'
-  db.query(query, (err, results)=>{
-    if(err) res.json({ msg:"There was an error", error: err })
-    else if(results) res.json({msg:`Here's the tasks table: `, results})
-  })
+  try{
+    const [rows] = await pool.query(query)
+    if(rows.length === 0) res.status(204).json({msg: "No hay nada en la tabla tasks xd", results: rows}) 
+    req.status(200).json({ msg: "Resultados encontrados en tabla tasks", results: rows})
+  } catch(error){
+    res.json({msg: "Error en tasks/get", error})
+  }
 })
 
-router.get("/:id", (req, res)=>{
-  console.log("Se hizo una consulta a tasks/id")
+router.get("/:id", async (req, res)=>{
   const {id} = req.params
   const query = 'SELECT * FROM tasks WHERE task_id = ?'
-  db.query(query, id, (err, results)=>{
-    if(err) res.json({ msg:"There was an error", error: err })
-    else if(results) res.json({ msg:"Tasks coincidence by id", results})
-  })
+  try{
+    const [rows] = await pool.query(query, [id])
+    if(rows.length === 0) res.status(204).json({msg: "No se encontro la tarea", results: rows}) 
+    req.status(200).json({ msg: "Tarea encontrada exitosamente", results: rows})
+  } catch(error){
+    res.json({msg: "Error en tasks/get/:id", error})
+  }
 })
 
-router.post("/", (req, res)=>{
+router.post("/", async (req, res)=>{
   const {query, values} = createInsertQuery("tasks", {...req.body, user_id: req.user_id})
-  db.query(query, values, (err, results)=>{
-    if(err) res.json({msg: "There was an error!", error: err})
-    else if(results) res.json({msg: "Task created succesfully ", results})
-  })
+  try{
+    const results = await pool.query(query, values)
+    //if( === 0) res.status(204).json({msg: "No hay nada en la tabla tasks xd", results: rows}) 
+    req.status(200).json({ msg: "Tarea creada exitosamente", results})
+  } catch(error){
+    res.json({msg: "Error en tasks/POST/", error})
+  }
 })
 
-router.put("/:id", (req, res)=>{
+router.put("/:id", async (req, res)=>{
   const {query, queryValues} = createUpdateQuery("tasks", req.params.id, req.body, req.user_id)
-  console.log({queryValues, query})
-  db.query(query, queryValues, (error, results)=>{
-    if(error) res.json({msg: "Hubo un error en task/PUT: ", error})
-    else if(results) res.json({msg: "Resultados en task/PUT: ", results})
-  })
+  try{
+    const results = await pool.query(query, queryValues)
+    if(results.affectedRows === 0) res.status(204).json({msg: "No se encontro una tarea con ese id", results}) 
+    req.status(200).json({ msg: "Tarea actualizada exitosamente", results})
+  } catch(error){
+    res.json({msg: "Error en tasks/PUT/:id", error})
+  }
 })
 
-router.delete("/:id", (req, res)=>{
+router.delete("/:id", async (req, res)=>{
   const {id} = req.params
   const query = `DELETE FROM tasks WHERE task_id = ? AND user_id = ?`
-  db.query(query, [id, req.user_id], (error, results)=>{
-    if(error) res.json({msg: "Hubo un error en task/DELETE: ", error})
-    else if (results.affectedRows === 0) res.json({ msg: "No se encontró una tarea con ese ID." });
-    else res.json({ msg: "Tarea eliminada exitosamente.", results })
-  })
+  try{
+    const results = await pool.query(query, [id, req.user_id])
+    if(results.affectedRows === 0) res.status(204).json({msg: "No se encontro una tarea con esas caracteristicas", results}) 
+    req.status(200).json({ msg: "Tarea eliminada correctamente", results})
+  } catch(error){
+    res.json({msg: "Error en tasks/DELETE/:id", error})
+  }
 })
 
 module.exports = router

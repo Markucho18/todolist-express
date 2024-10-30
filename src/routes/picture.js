@@ -11,7 +11,7 @@ const verifyToken = require("../utils/verifyToken")
 const MAX_SIZE = 2 * 1024 * 1024;
 
 const upload = multer({
-  dest: path.join(__dirname, 'uploads'), // Carpeta temporal para almacenar las imágenes subidas
+  dest: "../uploads", // Carpeta temporal para almacenar las imágenes subidas
   limits: {
     fileSize: MAX_SIZE // Limite de tamaño en bytes
   },
@@ -36,7 +36,7 @@ cloudinary.config({
 router.use(verifyToken)
 
 router.put("/", upload.single('profile_pic'), async (req, res)=>{
-  console.log("CONSULTA EN PUT DE USERS/PROFILE")
+  console.log("CONSULTA EN PUT DE USERS/PICTURE")
   if (!req.file) {
     return res.status(400).json({ msg: "No file uploaded" });
   }
@@ -45,10 +45,8 @@ router.put("/", upload.single('profile_pic'), async (req, res)=>{
     const imageUrl = result.secure_url
     fs.unlinkSync(req.file.path) //Eliminar archivo temporal
     const query = 'UPDATE users SET profile_pic = ? WHERE id = ?'
-    db.query(query, [imageUrl, req.user_id], (error, results)=>{
-      if(error) res.json({ msg: "An error ocurred in users/picture/POST", error})
-      else if(results) res.json({ msg: "Image upload done successfully in users/picture/POST", results})
-    })
+    const results = await pool.query(query, [imageUrl, req.user_id])
+    if(results.affectedRows > 0) res.json({msg: "Imagen actualizada correctamente", results})
   }
   catch(error){
     if (error instanceof multer.MulterError) {

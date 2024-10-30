@@ -4,37 +4,44 @@ const db = require("../db")
 
 const createInsertQuery = require("../utils/createInsertQuery")
 
-router.get("/", (req, res)=>{
+router.post("/check", async (req, res)=>{
   //Checkear si una tarea es hija de otra
   const { child_task_id, parent_task_id } = req.body
   const values = [child_task_id, parent_task_id]
   const query = "SELECT * FROM sub_tasks WHERE child_task_id = ? AND parent_task_id = ?"
-  db.query(query, values, (error, results)=>{
-    if(error) res.json({msg: "Hubo un error en task/GET/subTask: ", error})
-    else if(results.length > 0) res.json({msg: `La tarea ${values[0]} es hija de la tarea ${values[1]}`, results})
-    else res.json({msg: `La tarea ${values[0]} NO ES hija de la tarea ${values[1]}`, results})
-  })
+  try{
+    const [rows] = await pool.query(query)
+    if(rows.length === 0) res.status(204).json({msg: `La tarea ${child_task_id} NO es hija de ${parent_task_id}`, results: rows}) 
+    req.status(200).json({ msg:`La tarea ${child_task_id} es hija de ${parent_task_id}`, results: rows})
+  } catch(error){
+    res.json({msg: "Error en tasks/subTasks/POST/check", error})
+  }
 })
 
-router.post("/", (req, res) => {
+router.post("/create", async (req, res) => {
   // keys: child_task_id and parent_task_id
   const {query, values} = createInsertQuery("sub_tasks", req.body)
-  db.query(query, values, (error, results)=>{
-    if(error) res.json({msg: "Hubo un error en task/POST/subTask: ", error})
-    else if(results) res.json({msg: "Resultados en task/POST/subTask: ", results})
-  })
+  try{
+    const results = await pool.query(query, values)
+    if(results.affectedRows === 0) res.status(204).json({msg: `La subtarea no pudo ser creada`, results}) 
+    req.status(200).json({ msg:`Subtarea creda exitosamente`, results})
+  } catch(error){
+    res.json({msg: "Error en tasks/subTasks/POST/create", error})
+  }
 })
 
-router.delete("/", (req, res)=>{
+router.delete("/", async (req, res)=>{
   // keys: child_task_id and parent_task_id
   const { child_task_id, parent_task_id } = req.body
   const values = [child_task_id, parent_task_id]
   const query = "DELETE FROM sub_tasks WHERE child_task_id = ? AND parent_task_id = ?"
-  db.query(query, values, (error, results)=>{
-    if(error) res.json({msg: "Hubo un error en task/DELETE/subTask: ", error})
-    else if(results.length > 0) res.json({msg: `Se elimino la subtarea ${child_task_id}`, results})
-    else res.json({msg: `No se encontro la subtarea ${child_task_id}`, results})
-  })
+  try{
+    const results = await pool.query(query, values)
+    if(results.affectedRows === 0) res.status(204).json({msg: `La tarea no fue encontrada`, results}) 
+    req.status(200).json({ msg:`Subtarea eliminada exitosamente`, results})
+  } catch(error){
+    res.json({msg: "Error en tasks/subTasks/DELETE/", error})
+  }
 })
 
 module.exports = router

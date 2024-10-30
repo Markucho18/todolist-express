@@ -1,0 +1,51 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+    <form id="loginForm">
+      <label>
+        email:
+        <input name="email" type="text">
+      </label>
+      <label>
+        password:
+        <input name="user_password" type="password">
+      </label>
+      <button type="submit">Iniciar Sesion</button>
+    </form>
+    <script src="../main.js"></script>
+</body>
+</html>
+
+<style>
+  body{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  #loginForm{
+    margin-top: 200px;
+    border: 1px black solid;
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  label{
+    display: flex;
+    flex-direction: column;
+  }
+  input{
+    width: 100%;
+    padding: 4px 2px;
+  }
+  button{
+    display: block;
+    width: 300px;
+    padding: 12px 8px;
+  }
+</style>
