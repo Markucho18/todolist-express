@@ -17,7 +17,7 @@ const upload = multer({
   },
   fileFilter: (req, file, cb) => {
     // Puedes agregar un filtro para permitir solo ciertos tipos de archivos, por ejemplo, imágenes
-    const filetypes = /jpeg|jpg|png|webp/;
+    const filetypes = /jpeg|jpg|png/;
     const mimetype = filetypes.test(file.mimetype);
     
     if (mimetype) {

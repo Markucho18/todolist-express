@@ -35,7 +35,7 @@ router.post("/login", async (req, res) => {
     const passwordIsValid = await comparePasswords(user_password, hashedPassword);
     if (passwordIsValid) {
       const token = await jwt.sign({ user_id: results[0].id }, secretKey, { expiresIn: '1h' });
-      return res.json({ msg: "El email y la contraseña son válidos", token });
+      return res.json({ msg: "El email y la contraseña son válidos", token, userData: results[0]});
     } else {
       return res.json({ msg: "La contraseña no es válida", notValid: "password" });
     }
@@ -92,15 +92,52 @@ router.post("/", checkData, async (req, res)=>{
   }
 })
 
-router.put("/:id", async (req, res)=>{
-  console.log(req.body)
-  const {query, queryValues} = createUpdateQuery("users", req.params.id, req.body)
+router.put("/username/:id", async (req, res) => {
+  const {id} = req.params
+  const {username} = req.body
+  const query = `UPDATE users SET username = ? WHERE id = ?`
   try{
-    const [rows] = await pool.query(query, queryValues)
-    if(rows.length === 0) return res.json({ msg: "Usuario no encontrado"})
-    res.json({ msg: "Usuario editado correctamente", results})
+    const results = await pool.query(query, [username, id])
+    if(results.affectedRows === 0) return res.json({ msg: "Usuario no encontrado"})
+    res.json({ msg: "Nombre de usuario editado correctamente", results})
   } catch(error){
-    res.json({ msg: "Error en users/PUT/:id: ", error})
+    res.json({ msg: "Error en users/username/PUT/:id: ", error})
+  }
+})
+
+const checkPassword = async (req, res, next) => {
+  console.log("Se ejecuto el middleware de checkPassword")
+  const {id} = req.params
+  const {old_password} = req.body
+  const query = "SELECT * FROM users WHERE id = ?"
+  try{
+    const [rows] = await pool.query(query, [id])
+    if(rows.length == 0) res.json({ msg: "No se encontro a un usuario con ese id", results: rows})
+    const hashedPassword = rows[0].user_password
+    const passwordIsValid = await comparePasswords(old_password, hashedPassword)
+    if(passwordIsValid){
+      next()
+    } else res.json({ msg: "La contraseña no es valida", results: rows, passwordIsValid: false })
+  } catch(error){
+    res.json({msg: "Hubo un error en users/password/POST/:id", error })
+  }
+}
+
+router.put("/password/:id", checkPassword, async (req, res) => {
+  console.log("Consulta en password/PUT/:id")
+  const {id} = req.params
+  const {new_password} = req.body
+  const query = "UPDATE users SET user_password = ? WHERE id = ?"
+  console.log({id, new_password, query})
+  try{
+    const encryptedPassword = await encryptPassword(new_password)
+    console.log({encryptedPassword})
+    const results = await pool.query(query, [encryptedPassword, id])
+    console.log({results})
+    if(results.affectedRows === 0) res.json({msg: "No se pudo completar el put", results})
+    res.json({ msg: "Se actualizo la contraseña exitosamente", results})
+  } catch(error){
+    res.json({ msg: "Ocurrio un error en users/password/PUT/:id", error})
   }
 })
 
